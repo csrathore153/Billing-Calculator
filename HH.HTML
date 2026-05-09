@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title> BILLING CALCULATOR</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap">
+
+<style>
+    body {
+        font-family: 'Poppins', sans-serif;
+        background: #f0f2f5;
+        margin: 0;
+        transition: background 0.3s, color 0.3s;
+    }
+    header {
+        background: #007bff;
+        color: white;
+        text-align: center;
+        padding: 20px;
+        font-size: 28px;
+        font-weight: bold;
+    }
+    .container {
+        width: 90%;
+        margin: auto;
+        margin-top: 25px;
+    }
+    .card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        margin-bottom: 25px;
+    }
+    input, button, select {
+        padding: 12px;
+        margin: 6px 0;
+        width: 100%;
+        font-size: 16px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+    }
+    button {
+        cursor: pointer;
+        background: #007bff;
+        color: white;
+        border: none;
+        transition: background 0.2s;
+    }
+    button:hover {
+        background: #0056b3;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+    th, td {
+        padding: 12px;
+        border-bottom: 1px solid #ddd;
+        text-align: center;
+    }
+    .total-box {
+        font-size: 20px;
+        font-weight: bold;
+        text-align: right;
+        padding: 10px;
+    }
+    .bill-list {
+        cursor: pointer;
+        color: #007bff;
+        padding: 5px 0;
+    }
+    .bill-list:hover {
+        text-decoration: underline;
+    }
+    /* Dark Mode */
+    .dark {
+        background: #1e1e1e;
+        color: white;
+    }
+    .dark .card {
+        background: #2c2c2c;
+        color: white;
+    }
+    .dark input, .dark select {
+        background: #3a3a3a;
+        color: white;
+        border: 1px solid #666;
+    }
+    .dark table {
+        color: white;
+    }
+    .dark header {
+        background: #222;
+    }
+    /* Invoice Styling */
+    #invoice {
+        display: none;
+        padding: 20px;
+        background: white;
+        border-radius: 10px;
+    }
+    #invoice h2, #invoice h3 {
+        text-align: center;
+        margin: 5px 0;
+    }
+    #invoice table th, #invoice table td {
+        border: 1px solid #ddd;
+        padding: 10px;
+    }
+    #invoice .invoice-info {
+        margin-bottom: 20px;
+    }
+    #invoice img#invoiceShopPhoto {
+        max-width:120px;
+        max-height:120px;
+        object-fit:contain;
+        border-radius:10px;
+        border:1px solid #ccc;
+        box-shadow: 0 0 5px rgba(0,0,0,0.2);
+    }
+</style>
+</head>
+<body>
+
+<header>
+    BILLING CALCULATOR
+</header>
+
+<div class="container">
+
+    <!-- Shop Details -->
+    <div class="card">
+        <h2>Shop Details</h2>
+        <input type="text" id="shopName" placeholder="Enter Shop Name">
+        <input type="text" id="shopAddress" placeholder="Enter Shop Address">
+        <input type="text" id="shopGST" placeholder="Enter Shop GST Number">
+        <input type="file" id="shopPhoto" accept="image/*">
+    </div>
+
+    <!-- Customer Details -->
+    <div class="card">
+        <h2>Customer Details</h2>
+        <input type="text" id="custName" placeholder="Customer Name">
+        <input type="text" id="custPhone" placeholder="Customer Phone">
+    </div>
+
+    <!-- Billing Items -->
+    <div class="card">
+        <h2>Add Items</h2>
+        <input type="text" id="itemName" placeholder="Item Name">
+        <input type="number" id="itemPrice" placeholder="Price">
+        <input type="number" id="itemQty" placeholder="Quantity">
+        <button onclick="addItem()">Add Item</button>
+
+        <table id="billTable">
+            <tr>
+                <th>Item</th>
+                <th>Price</th>
+                <th>Qty</th>
+                <th>Total</th>
+                <th>Remove</th>
+            </tr>
+        </table>
+
+        <h3>GST & Discount</h3>
+        <input type="number" id="gst" placeholder="GST % (e.g., 18)">
+        <input type="number" id="discount" placeholder="Discount %">
+
+        <div class="total-box">
+            Grand Total: ₹ <span id="grandTotal">0</span>
+        </div>
+
+        <button onclick="saveBill()">Save Bill</button>
+        <button onclick="printInvoice()">Print Invoice</button>
+        <button onclick="downloadInvoicePDF()">Download PDF</button>
+    </div>
+
+    <!-- Saved Bills -->
+    <div class="card">
+        <h2>Saved Bills</h2>
+        <ul id="savedBills"></ul>
+    </div>
+
+    <!-- Dark Mode -->
+    <div class="card">
+        <button onclick="toggleDark()">Toggle Dark Mode</button>
+    </div>
+
+    <!-- Invoice Section -->
+    <div id="invoice" class="card">
+        <!-- Professional Header -->
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+            <div>
+                <h2 id="invoiceShop" style="margin:0;"></h2>
+                <p id="invoiceShopAddress" style="margin:0;"></p>
+                <p><strong>GST No:</strong> <span id="invoiceShopGST"></span></p>
+            </div>
+            <div>
+                <img id="invoiceShopPhoto" src="" alt="Shop Logo">
+            </div>
+        </div>
+
+        <div class="invoice-info">
+            <strong>Invoice #: </strong><span id="invoiceNo"></span><br>
+            <strong>Date: </strong><span id="invoiceDate"></span><br>
+            <strong>Customer: </strong><span id="invoiceCustomer"></span><br>
+            <strong>Phone: </strong><span id="invoicePhone"></span>
+        </div>
+
+        <table id="invoiceTable">
+            <tr>
+                <th>Item</th>
+                <th>Price</th>
+                <th>Qty</th>
+                <th>Total</th>
+            </tr>
+        </table>
+
+        <div class="total-box">
+            Grand Total: ₹ <span id="invoiceTotal"></span>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+
+<script>
+let items = [];
+let billCount = 0;
+
+function addItem() {
+    let name = itemName.value;
+    let price = parseFloat(itemPrice.value);
+    let qty = parseInt(itemQty.value);
+
+    if (!name || !price || !qty) {
+        alert("Enter valid item details!");
+        return;
+    }
+
+    items.push({ name, price, qty, total: price * qty });
+    updateTable();
+
+    itemName.value = "";
+    itemPrice.value = "";
+    itemQty.value = "";
+}
+
+function updateTable() {
+    let table = billTable;
+    table.innerHTML = `
+        <tr>
+            <th>Item</th>
+            <th>Price</th>
+            <th>Qty</th>
+            <th>Total</th>
+            <th>Remove</th>
+        </tr>
+    `;
+
+    let total = 0;
+    items.forEach((item, i) => {
+        table.innerHTML += `
+            <tr>
+                <td>${item.name}</td>
+                <td>${item.price}</td>
+                <td>${item.qty}</td>
+                <td>${item.total}</td>
+                <td><button onclick="removeItem(${i})">X</button></td>
+            </tr>
+        `;
+        total += item.total;
+    });
+
+    let gst = parseFloat(document.getElementById("gst").value) || 0;
+    let discount = parseFloat(document.getElementById("discount").value) || 0;
+
+    total += (total * gst) / 100;
+    total -= (total * discount) / 100;
+
+    document.getElementById("grandTotal").innerText = total.toFixed(2);
+}
+
+function removeItem(i) {
+    items.splice(i, 1);
+    updateTable();
+}
+
+function saveBill() {
+    if (items.length === 0) return alert("No items added!");
+
+    billCount++;
+    let billName = "Invoice " + billCount;
+
+    let shopFile = document.getElementById("shopPhoto").files[0];
+    let reader = new FileReader();
+
+    reader.onload = function(e) {
+        let billData = {
+            shopName: shopName.value,
+            shopAddress: shopAddress.value,
+            gstNumber: shopGST.value,
+            shopPhoto: e.target.result || "",
+            customer: custName.value,
+            phone: custPhone.value,
+            items: items,
+            gst: parseFloat(document.getElementById("gst").value) || 0,
+            discount: parseFloat(document.getElementById("discount").value) || 0,
+            total: grandTotal.innerText,
+            date: new Date().toLocaleDateString()
+        };
+
+        let allBills = JSON.parse(localStorage.getItem("bills") || "{}");
+        allBills[billName] = billData;
+        localStorage.setItem("bills", JSON.stringify(allBills));
+        alert("Invoice Saved!");
+        loadSavedBills();
+    };
+
+    if (shopFile) {
+        reader.readAsDataURL(shopFile);
+    } else {
+        reader.onload({target:{result:""}});
+    }
+}
+
+function loadSavedBills() {
+    let list = savedBills;
+    list.innerHTML = "";
+
+    let bills = JSON.parse(localStorage.getItem("bills") || "{}");
+
+    Object.keys(bills).forEach(bill => {
+        list.innerHTML += `<li class='bill-list' onclick='viewInvoice("${bill}")'>${bill}</li>`;
+    });
+}
+
+function viewInvoice(bill) {
+    let data = JSON.parse(localStorage.getItem("bills"))[bill];
+    displayInvoice(data, bill);
+}
+
+function displayInvoice(data, billNo) {
+    document.getElementById("invoiceShop").innerText = data.shopName;
+    document.getElementById("invoiceShopAddress").innerText = data.shopAddress;
+    document.getElementById("invoiceShopGST").innerText = data.gstNumber || "";
+    document.getElementById("invoiceNo").innerText = billNo;
+    document.getElementById("invoiceDate").innerText = data.date;
+    document.getElementById("invoiceCustomer").innerText = data.customer;
+    document.getElementById("invoicePhone").innerText = data.phone;
+
+    let shopPhoto = document.getElementById("invoiceShopPhoto");
+    shopPhoto.src = data.shopPhoto || "";
+    shopPhoto.style.display = data.shopPhoto ? "block" : "none";
+
+    let table = document.getElementById("invoiceTable");
+    table.innerHTML = `<tr>
+        <th>Item</th><th>Price</th><th>Qty</th><th>Total</th>
+    </tr>`;
+    data.items.forEach(item => {
+        table.innerHTML += `<tr>
+            <td>${item.name}</td>
+            <td>${item.price}</td>
+            <td>${item.qty}</td>
+            <td>${item.total}</td>
+        </tr>`;
+    });
+
+    document.getElementById("invoiceTotal").innerText = data.total;
+    document.getElementById("invoice").style.display = "block";
+}
+
+function printInvoice() {
+    let invoice = document.getElementById("invoice");
+    let win = window.open('', '', 'width=900,height=700');
+    win.document.write(invoice.outerHTML);
+    win.print();
+}
+
+function downloadInvoicePDF() {
+    let invoice = document.getElementById("invoice");
+    html2pdf(invoice);
+}
+
+function toggleDark() {
+    document.body.classList.toggle("dark");
+}
+
+loadSavedBills();
+</script>
+
+</body>
+</html>
